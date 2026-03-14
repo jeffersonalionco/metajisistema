@@ -1,0 +1,50 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (senhas, chaves, conexões)
+.env
+.env.local
+.env.*.local
+
+# Build / saída
+dist/
+build/
+.next/
+out/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Cobertura de testes
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+*.tsbuildinfo
+
+# Temporários
+tmp/
+temp/
+*.tmp
+
+# Uploads (se houver pasta de upload no backend)
+uploads/

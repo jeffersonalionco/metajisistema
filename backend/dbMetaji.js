@@ -1,0 +1,108 @@
+import pg from 'pg';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+dotenv.config({ path: path.join(__dirname, '.env') });
+if (!process.env.METAJI_HOST && !process.env.METAJI_DATABASE) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
+
+const { Pool } = pg;
+
+const password = process.env.METAJI_PASSWORD;
+const passwordStr = typeof password === 'string' ? password : '';
+
+const pool = new Pool({
+  host: process.env.METAJI_HOST || 'localhost',
+  port: parseInt(process.env.METAJI_PORT || '5432', 10),
+  database: process.env.METAJI_DATABASE || 'metajireceitas',
+  user: process.env.METAJI_USER || 'postgres',
+  password: passwordStr,
+});
+
+pool.on('error', (err) => {
+  console.error('Erro no pool metajireceitas:', err);
+});
+
+export async function query(text, params) {
+  try {
+    return await pool.query(text, params);
+  } catch (err) {
+    console.error('Erro na query metajireceitas:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Cria a tabela usuarios e a coluna admin no banco metajireceitas, se não existirem.
+ * Chamado automaticamente na subida do servidor.
+ */
+export async function initMetajiSchema() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS public.usuarios (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL,
+        email VARCHAR(150) NOT NULL UNIQUE,
+        senha VARCHAR(255) NOT NULL,
+        ativo BOOLEAN DEFAULT true,
+        admin BOOLEAN DEFAULT false,
+        criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_usuarios_email ON public.usuarios (email)
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS admin BOOLEAN DEFAULT false
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS cpf VARCHAR(14)
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS setor VARCHAR(100)
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS cargo VARCHAR(100)
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS public.modo_preparo_alteracoes (
+        indc_prod_codigo NUMERIC(8,0) PRIMARY KEY,
+        usuario_id INTEGER NOT NULL REFERENCES public.usuarios(id),
+        alterado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS public.empresa (
+        id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        nome_fantasia VARCHAR(150),
+        razao_social VARCHAR(200),
+        cnpj VARCHAR(18),
+        logo_base64 TEXT,
+        endereco VARCHAR(300),
+        telefone VARCHAR(20),
+        email VARCHAR(100),
+        atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`
+      INSERT INTO public.empresa (id) VALUES (1) ON CONFLICT (id) DO NOTHING
+    `);
+  } finally {
+    client.release();
+  }
+}
+
+export { pool };

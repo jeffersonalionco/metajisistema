@@ -1,0 +1,5 @@
+-- Alternativa ao script Node: definir um usuário já existente como admin.
+-- Execute após ter pelo menos um usuário cadastrado (ex.: pelo registro na tela).
+--
+-- Exemplo: tornar admin o usuário com e-mail admin@receitas.local
+-- UPDATE public.usuarios SET admin = true WHERE email = 'admin@receitas.local';
