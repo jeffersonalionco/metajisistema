@@ -80,3 +80,23 @@ export async function updateEmpresa(dados) {
   const { data } = await api.put('/empresa', dados);
   return data;
 }
+
+export async function analisarRelatorioExcel(arquivo) {
+  const formData = new FormData();
+  formData.append('arquivo', arquivo);
+  const { data } = await api.post('/relatorios/analisar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000,
+  });
+  return data;
+}
+
+export async function salvarResumoMensal(resumo, periodo, nome_relatorio) {
+  const { data } = await api.post('/relatorios', { resumo, periodo, nome_relatorio });
+  return data;
+}
+
+export async function obterResumoMensal(id) {
+  const { data } = await api.get(`/relatorios/${id}`);
+  return data;
+}

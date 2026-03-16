@@ -85,6 +85,20 @@ export async function initMetajiSchema() {
       )
     `);
     await client.query(`
+      CREATE TABLE IF NOT EXISTS public.resumos_mensais (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL REFERENCES public.usuarios(id),
+        nome_arquivo VARCHAR(255) NOT NULL,
+        periodo VARCHAR(100),
+        dados JSONB NOT NULL,
+        criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`
+      ALTER TABLE public.resumos_mensais
+      ADD COLUMN IF NOT EXISTS nome_relatorio VARCHAR(200)
+    `);
+    await client.query(`
       CREATE TABLE IF NOT EXISTS public.empresa (
         id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
         nome_fantasia VARCHAR(150),

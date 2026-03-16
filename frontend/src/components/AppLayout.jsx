@@ -10,10 +10,16 @@ export function AppLayout({ children }) {
   const [menuAberto, setMenuAberto] = useState(false);
 
   useEffect(() => {
+    // Só busca dados da empresa quando há usuário logado.
+    // Isso evita 401 e redirecionamento para login em páginas públicas (ex.: links de resumo mensal).
+    if (!usuario) {
+      setEmpresa(null);
+      return;
+    }
     getEmpresa()
       .then(setEmpresa)
       .catch(() => setEmpresa(null));
-  }, []);
+  }, [usuario]);
 
   useEffect(() => {
     setMenuAberto(false);
@@ -42,6 +48,12 @@ export function AppLayout({ children }) {
             className={`block py-3 px-4 rounded-lg font-medium transition-colors md:py-2 md:px-0 md:inline-block md:rounded-none ${linkAtivo('/usuarios') ? 'bg-emerald-600/20 text-white md:bg-transparent md:text-white md:underline' : 'text-emerald-100 hover:bg-white/10 md:hover:bg-transparent md:hover:underline'}`}
           >
             Usuários
+          </Link>
+          <Link
+            to="/relatorios"
+            className={`block py-3 px-4 rounded-lg font-medium transition-colors md:py-2 md:px-0 md:inline-block md:rounded-none ${linkAtivo('/relatorios') ? 'bg-emerald-600/20 text-white md:bg-transparent md:text-white md:underline' : 'text-emerald-100 hover:bg-white/10 md:hover:bg-transparent md:hover:underline'}`}
+          >
+            Resumo mensal
           </Link>
         </>
       )}

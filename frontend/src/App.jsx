@@ -6,6 +6,8 @@ import { Receitas } from './pages/Receitas';
 import { Usuarios } from './pages/Usuarios';
 import { Empresa } from './pages/Empresa';
 import { FichaCadastral } from './pages/FichaCadastral';
+import { Relatorios } from './pages/Relatorios';
+import { ResumoMensalDetalhe } from './pages/ResumoMensalDetalhe';
 
 function RotasProtegidas({ children }) {
   const { isAuthenticated, carregando } = useAuth();
@@ -61,6 +63,20 @@ export default function App() {
             </RotaAdmin>
           </RotasProtegidas>
         }
+      />
+      <Route
+        path="/relatorios"
+        element={
+          <RotasProtegidas>
+            <RotaAdmin>
+              <Relatorios />
+            </RotaAdmin>
+          </RotasProtegidas>
+        }
+      />
+      <Route
+        path="/resumo-mensal/:id"
+        element={<ResumoMensalDetalhe />}
       />
       <Route
         path="/ficha/:codigo"
