@@ -78,6 +78,26 @@ export async function initMetajiSchema() {
       ADD COLUMN IF NOT EXISTS cargo VARCHAR(100)
     `);
     await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS pode_documentacao BOOLEAN DEFAULT false
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS pode_usuarios BOOLEAN DEFAULT false
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS pode_relatorios_mensal BOOLEAN DEFAULT false
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS pode_relatorio_validade BOOLEAN DEFAULT false
+    `);
+    await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS pode_empresa BOOLEAN DEFAULT false
+    `);
+    await client.query(`
       CREATE TABLE IF NOT EXISTS public.modo_preparo_alteracoes (
         indc_prod_codigo NUMERIC(8,0) PRIMARY KEY,
         usuario_id INTEGER NOT NULL REFERENCES public.usuarios(id),

@@ -8,7 +8,9 @@ import { query } from '../dbMetaji.js';
 export async function listar(req, res) {
   try {
     const result = await query(
-      `SELECT id, nome, email, cpf, telefone, setor, cargo, ativo, admin, criado_em
+      `SELECT id, nome, email, cpf, telefone, setor, cargo, ativo, admin,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              criado_em
        FROM public.usuarios
        ORDER BY nome`
     );
@@ -25,7 +27,25 @@ export async function listar(req, res) {
  */
 export async function criar(req, res) {
   try {
-    const { nome, email, senha, cpf, telefone, setor, cargo } = req.body || {};
+    const {
+      nome,
+      email,
+      senha,
+      cpf,
+      telefone,
+      setor,
+      cargo,
+      pode_documentacao,
+      pode_usuarios,
+      pode_relatorios_mensal,
+      pode_relatorio_validade,
+      pode_empresa,
+    } = req.body || {};
+    const podeDoc = pode_documentacao === true;
+    const podeUsuarios = pode_usuarios === true;
+    const podeRelMensal = pode_relatorios_mensal === true;
+    const podeRelValidade = pode_relatorio_validade === true;
+    const podeEmpresa = pode_empresa === true;
     if (!nome?.trim() || !email?.trim() || !senha) {
       return res.status(400).json({ erro: 'Nome completo, e-mail e senha são obrigatórios' });
     }
@@ -41,13 +61,31 @@ export async function criar(req, res) {
     const cargoVal = cargo != null && String(cargo).trim() !== '' ? String(cargo).trim() : null;
 
     await query(
-      `INSERT INTO public.usuarios (nome, email, senha, cpf, telefone, setor, cargo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [nome.trim(), emailNorm, senhaHash, cpfVal, telefoneVal, setorVal, cargoVal]
+      `INSERT INTO public.usuarios (
+         nome, email, senha, cpf, telefone, setor, cargo,
+         pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+      [
+        nome.trim(),
+        emailNorm,
+        senhaHash,
+        cpfVal,
+        telefoneVal,
+        setorVal,
+        cargoVal,
+        podeDoc,
+        podeUsuarios,
+        podeRelMensal,
+        podeRelValidade,
+        podeEmpresa,
+      ]
     );
 
     const result = await query(
-      `SELECT id, nome, email, cpf, telefone, setor, cargo, ativo, admin, criado_em
+      `SELECT id, nome, email, cpf, telefone, setor, cargo, ativo, admin,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              criado_em
        FROM public.usuarios WHERE email = $1`,
       [emailNorm]
     );
@@ -58,5 +96,78 @@ export async function criar(req, res) {
     }
     console.error('Erro ao criar usuário:', err);
     res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
+  }
+}
+
+export async function atualizarPermissaoDocumentacao(req, res) {
+  try {
+    const { id } = req.params;
+    const { pode_documentacao } = req.body || {};
+    if (typeof pode_documentacao !== 'boolean') {
+      return res.status(400).json({ erro: 'Campo pode_documentacao deve ser booleano.' });
+    }
+
+    const result = await query(
+      `UPDATE public.usuarios
+       SET pode_documentacao = $2
+       WHERE id = $1
+       RETURNING id, nome, email, cpf, telefone, setor, cargo, ativo, admin, pode_documentacao, criado_em`,
+      [id, pode_documentacao],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro em atualizarPermissaoDocumentacao:', err);
+    res.status(500).json({ erro: 'Erro ao atualizar permissão de documentação.' });
+  }
+}
+
+export async function atualizarPermissoesUsuario(req, res) {
+  try {
+    const { id } = req.params;
+    const {
+      pode_documentacao,
+      pode_usuarios,
+      pode_relatorios_mensal,
+      pode_relatorio_validade,
+      pode_empresa,
+    } = req.body || {};
+
+    const campos = [
+      ['pode_documentacao', pode_documentacao],
+      ['pode_usuarios', pode_usuarios],
+      ['pode_relatorios_mensal', pode_relatorios_mensal],
+      ['pode_relatorio_validade', pode_relatorio_validade],
+      ['pode_empresa', pode_empresa],
+    ].filter(([, valor]) => typeof valor === 'boolean');
+
+    if (campos.length === 0) {
+      return res.status(400).json({ erro: 'Nenhuma permissão válida informada.' });
+    }
+
+    const sets = campos.map(([campo], i) => `${campo} = $${i + 2}`).join(', ');
+    const params = [id, ...campos.map(([, valor]) => valor)];
+
+    const result = await query(
+      `UPDATE public.usuarios
+       SET ${sets}
+       WHERE id = $1
+       RETURNING id, nome, email, cpf, telefone, setor, cargo, ativo, admin,
+                 pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa, criado_em`,
+      params,
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro em atualizarPermissoesUsuario:', err);
+    res.status(500).json({ erro: 'Erro ao atualizar permissões do usuário.' });
   }
 }

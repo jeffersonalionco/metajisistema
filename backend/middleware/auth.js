@@ -17,7 +17,11 @@ export async function requireAuth(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const result = await query(
-      'SELECT id, nome, email, ativo, admin, cpf, telefone, setor, cargo FROM public.usuarios WHERE id = $1',
+      `SELECT id, nome, email, ativo, admin,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              cpf, telefone, setor, cargo
+       FROM public.usuarios
+       WHERE id = $1`,
       [decoded.id]
     );
 
@@ -43,4 +47,26 @@ export function requireAdmin(req, res, next) {
     return res.status(403).json({ erro: 'Acesso restrito a administradores' });
   }
   next();
+}
+
+export function requireDocumentacaoEditor(req, res, next) {
+  if (!req.usuario) {
+    return res.status(401).json({ erro: 'Usuário não autenticado' });
+  }
+  if (req.usuario.admin === true || req.usuario.pode_documentacao === true) {
+    return next();
+  }
+  return res.status(403).json({ erro: 'Sem permissão para editar/publicar documentação' });
+}
+
+export function requirePermissao(campo, mensagemErro) {
+  return function middlewarePermissao(req, res, next) {
+    if (!req.usuario) {
+      return res.status(401).json({ erro: 'Usuário não autenticado' });
+    }
+    if (req.usuario.admin === true || req.usuario[campo] === true) {
+      return next();
+    }
+    return res.status(403).json({ erro: mensagemErro || 'Sem permissão para acessar este recurso' });
+  };
 }

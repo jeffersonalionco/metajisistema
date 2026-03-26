@@ -25,7 +25,11 @@ export async function login(req, res) {
     }
 
     const result = await query(
-      'SELECT id, nome, email, senha, ativo, admin, cpf, telefone, setor, cargo FROM public.usuarios WHERE email = $1',
+      `SELECT id, nome, email, senha, ativo, admin,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              cpf, telefone, setor, cargo
+       FROM public.usuarios
+       WHERE email = $1`,
       [email.trim().toLowerCase()]
     );
 
@@ -51,6 +55,11 @@ export async function login(req, res) {
         nome: usuario.nome,
         email: usuario.email,
         admin: !!usuario.admin,
+        pode_documentacao: !!usuario.pode_documentacao,
+        pode_usuarios: !!usuario.pode_usuarios,
+        pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
+        pode_relatorio_validade: !!usuario.pode_relatorio_validade,
+        pode_empresa: !!usuario.pode_empresa,
         cpf: usuario.cpf || null,
         telefone: usuario.telefone || null,
         setor: usuario.setor || null,
@@ -91,7 +100,10 @@ export async function registro(req, res) {
     );
 
     const result = await query(
-      'SELECT id, nome, email, admin, cpf, telefone, setor, cargo FROM public.usuarios WHERE email = $1',
+      `SELECT id, nome, email, admin,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              cpf, telefone, setor, cargo
+       FROM public.usuarios WHERE email = $1`,
       [emailNorm]
     );
     const usuario = result.rows[0];
@@ -103,6 +115,11 @@ export async function registro(req, res) {
         nome: usuario.nome,
         email: usuario.email,
         admin: !!usuario.admin,
+        pode_documentacao: !!usuario.pode_documentacao,
+        pode_usuarios: !!usuario.pode_usuarios,
+        pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
+        pode_relatorio_validade: !!usuario.pode_relatorio_validade,
+        pode_empresa: !!usuario.pode_empresa,
         cpf: usuario.cpf || null,
         telefone: usuario.telefone || null,
         setor: usuario.setor || null,
@@ -134,6 +151,11 @@ export async function me(req, res) {
         nome: usuario.nome,
         email: usuario.email,
         admin: !!usuario.admin,
+        pode_documentacao: !!usuario.pode_documentacao,
+        pode_usuarios: !!usuario.pode_usuarios,
+        pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
+        pode_relatorio_validade: !!usuario.pode_relatorio_validade,
+        pode_empresa: !!usuario.pode_empresa,
         cpf: usuario.cpf || null,
         telefone: usuario.telefone || null,
         setor: usuario.setor || null,
