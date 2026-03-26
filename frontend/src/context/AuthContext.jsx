@@ -76,6 +76,11 @@ export function AuthProvider({ children }) {
     logout,
     isAuthenticated: !!token,
     isAdmin: !!usuario?.admin,
+    canEditDocumentacao: !!usuario?.admin || !!usuario?.pode_documentacao,
+    canManageUsuarios: !!usuario?.admin || !!usuario?.pode_usuarios,
+    canRelatoriosMensal: !!usuario?.admin || !!usuario?.pode_relatorios_mensal,
+    canRelatorioValidade: !!usuario?.admin || !!usuario?.pode_relatorio_validade,
+    canEmpresa: !!usuario?.admin || !!usuario?.pode_empresa,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

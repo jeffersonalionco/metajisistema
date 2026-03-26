@@ -71,6 +71,16 @@ export async function criarUsuario(dados) {
   return data;
 }
 
+export async function atualizarPermissaoDocumentacaoUsuario(id, pode_documentacao) {
+  const { data } = await api.patch(`/usuarios/${id}/documentacao`, { pode_documentacao });
+  return data;
+}
+
+export async function atualizarPermissoesUsuario(id, payload) {
+  const { data } = await api.patch(`/usuarios/${id}/permissoes`, payload);
+  return data;
+}
+
 export async function getEmpresa() {
   const { data } = await api.get('/empresa');
   return data;

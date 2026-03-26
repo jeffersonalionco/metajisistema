@@ -28,13 +28,13 @@ function RotasProtegidas({ children }) {
   return children;
 }
 
-function RotaAdmin({ children }) {
-  const { isAdmin } = useAuth();
-  if (!isAdmin) return <Navigate to="/" replace />;
+function RotaPermissao({ allow, children }) {
+  if (!allow) return <Navigate to="/" replace />;
   return children;
 }
 
 export default function App() {
+  const { canManageUsuarios, canEmpresa, canRelatoriosMensal, canRelatorioValidade } = useAuth();
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -51,9 +51,9 @@ export default function App() {
         path="/usuarios"
         element={
           <RotasProtegidas>
-            <RotaAdmin>
+            <RotaPermissao allow={canManageUsuarios}>
               <Usuarios />
-            </RotaAdmin>
+            </RotaPermissao>
           </RotasProtegidas>
         }
       />
@@ -61,9 +61,9 @@ export default function App() {
         path="/empresa"
         element={
           <RotasProtegidas>
-            <RotaAdmin>
+            <RotaPermissao allow={canEmpresa}>
               <Empresa />
-            </RotaAdmin>
+            </RotaPermissao>
           </RotasProtegidas>
         }
       />
@@ -71,9 +71,9 @@ export default function App() {
         path="/relatorios"
         element={
           <RotasProtegidas>
-            <RotaAdmin>
+            <RotaPermissao allow={canRelatoriosMensal}>
               <Relatorios />
-            </RotaAdmin>
+            </RotaPermissao>
           </RotasProtegidas>
         }
       />
@@ -81,9 +81,9 @@ export default function App() {
         path="/relatorios/validade"
         element={
           <RotasProtegidas>
-            <RotaAdmin>
+            <RotaPermissao allow={canRelatorioValidade}>
               <RelatorioValidades />
-            </RotaAdmin>
+            </RotaPermissao>
           </RotasProtegidas>
         }
       />

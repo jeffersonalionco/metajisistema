@@ -87,7 +87,7 @@ function previewMarkdown({ descricao, conteudo }) {
 }
 
 export function Documentacao() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, canEditDocumentacao } = useAuth();
   const [posts, setPosts] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
@@ -276,7 +276,7 @@ export function Documentacao() {
             Informações internas da empresa: processos, padrões, instruções e comunicados.
           </p>
         </div>
-        {isAdmin && (
+        {canEditDocumentacao && (
           <button
             type="button"
             onClick={abrirNovo}
@@ -413,7 +413,7 @@ export function Documentacao() {
                       >
                         Ler completo →
                       </Link>
-                      {isAdmin && (
+                      {canEditDocumentacao && (
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
@@ -440,7 +440,7 @@ export function Documentacao() {
         </div>
       )}
 
-      {modalAberto && (
+      {canEditDocumentacao && modalAberto && (
         <div className="fixed inset-0 z-[60]">
           <button
             type="button"

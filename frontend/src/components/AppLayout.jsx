@@ -4,7 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { getEmpresa } from '../services/api';
 
 export function AppLayout({ children }) {
-  const { usuario, logout, isAdmin } = useAuth();
+  const {
+    usuario,
+    logout,
+    canEmpresa,
+    canManageUsuarios,
+    canRelatoriosMensal,
+    canRelatorioValidade,
+  } = useAuth();
   const location = useLocation();
   const [empresa, setEmpresa] = useState(null);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -69,65 +76,75 @@ export function AppLayout({ children }) {
       <Link to="/documentacao" className={desktopLink(linkAtivo('/documentacao'))}>
         Documentação
       </Link>
-      {isAdmin && (
+      {(canEmpresa || canManageUsuarios || canRelatoriosMensal || canRelatorioValidade) && (
         <>
-          <Link to="/empresa" className={desktopLink(linkAtivo('/empresa'))}>
-            Empresa
-          </Link>
-          <Link to="/usuarios" className={desktopLink(linkAtivo('/usuarios'))}>
-            Usuários
-          </Link>
+          {canEmpresa && (
+            <Link to="/empresa" className={desktopLink(linkAtivo('/empresa'))}>
+              Empresa
+            </Link>
+          )}
+          {canManageUsuarios && (
+            <Link to="/usuarios" className={desktopLink(linkAtivo('/usuarios'))}>
+              Usuários
+            </Link>
+          )}
           {/* Relatórios - submenu */}
-          <div ref={submenuRef} className="hidden md:inline-block relative">
-            <button
-              type="button"
-              onClick={() => setSubmenuRelatoriosAberto((v) => !v)}
-              className={`${desktopLink(rotaComecaCom('/relatorios'))} pr-2`}
-              aria-haspopup="menu"
-              aria-expanded={submenuRelatoriosAberto}
-            >
-              <span>Relatórios</span>
-              <svg
-                className={`h-4 w-4 transition-transform ${submenuRelatoriosAberto ? 'rotate-180' : ''}`}
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
+          {(canRelatoriosMensal || canRelatorioValidade) && (
+            <div ref={submenuRef} className="hidden md:inline-block relative">
+              <button
+                type="button"
+                onClick={() => setSubmenuRelatoriosAberto((v) => !v)}
+                className={`${desktopLink(rotaComecaCom('/relatorios'))} pr-2`}
+                aria-haspopup="menu"
+                aria-expanded={submenuRelatoriosAberto}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            {submenuRelatoriosAberto && (
-              <div className="absolute left-0 mt-2 w-60 rounded-xl bg-white text-slate-800 shadow-xl ring-1 ring-black/5 z-50 overflow-hidden">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    Relatórios
-                  </p>
+                <span>Relatórios</span>
+                <svg
+                  className={`h-4 w-4 transition-transform ${submenuRelatoriosAberto ? 'rotate-180' : ''}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              {submenuRelatoriosAberto && (
+                <div className="absolute left-0 mt-2 w-60 rounded-xl bg-white text-slate-800 shadow-xl ring-1 ring-black/5 z-50 overflow-hidden">
+                  <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      Relatórios
+                    </p>
+                  </div>
+                  {canRelatoriosMensal && (
+                    <Link
+                      to="/relatorios"
+                      className={`flex items-center justify-between px-3 py-2.5 text-sm hover:bg-emerald-50 ${
+                        linkAtivo('/relatorios') ? 'bg-emerald-50 text-emerald-800 font-semibold' : ''
+                      }`}
+                    >
+                      <span>Resumo mensal</span>
+                      <span className="text-[11px] text-slate-400">Excel + IA</span>
+                    </Link>
+                  )}
+                  {canRelatorioValidade && (
+                    <Link
+                      to="/relatorios/validade"
+                      className={`flex items-center justify-between px-3 py-2.5 text-sm hover:bg-emerald-50 ${
+                        linkAtivo('/relatorios/validade') ? 'bg-emerald-50 text-emerald-800 font-semibold' : ''
+                      }`}
+                    >
+                      <span>Validades</span>
+                      <span className="text-[11px] text-slate-400">ERP</span>
+                    </Link>
+                  )}
                 </div>
-                <Link
-                  to="/relatorios"
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm hover:bg-emerald-50 ${
-                    linkAtivo('/relatorios') ? 'bg-emerald-50 text-emerald-800 font-semibold' : ''
-                  }`}
-                >
-                  <span>Resumo mensal</span>
-                  <span className="text-[11px] text-slate-400">Excel + IA</span>
-                </Link>
-                <Link
-                  to="/relatorios/validade"
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm hover:bg-emerald-50 ${
-                    linkAtivo('/relatorios/validade') ? 'bg-emerald-50 text-emerald-800 font-semibold' : ''
-                  }`}
-                >
-                  <span>Validades</span>
-                  <span className="text-[11px] text-slate-400">ERP</span>
-                </Link>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </>
@@ -143,24 +160,32 @@ export function AppLayout({ children }) {
         <span>Documentação</span>
         <span className="text-[11px] font-semibold text-emerald-100/90">Posts</span>
       </Link>
-      {isAdmin && (
+      {(canEmpresa || canManageUsuarios || canRelatoriosMensal || canRelatorioValidade) && (
         <>
-          <Link to="/empresa" className={mobileLink(linkAtivo('/empresa'))}>
-            <span>Empresa</span>
-            <span className="text-[11px] font-semibold text-emerald-100/90">Dados</span>
-          </Link>
-          <Link to="/usuarios" className={mobileLink(linkAtivo('/usuarios'))}>
-            <span>Usuários</span>
-            <span className="text-[11px] font-semibold text-emerald-100/90">Admin</span>
-          </Link>
-          <Link to="/relatorios" className={mobileLink(linkAtivo('/relatorios'))}>
-            <span>Relatórios</span>
-            <span className="text-[11px] font-semibold text-emerald-100/90">Resumo mensal</span>
-          </Link>
-          <Link to="/relatorios/validade" className={mobileLink(linkAtivo('/relatorios/validade'))}>
-            <span>Relatórios</span>
-            <span className="text-[11px] font-semibold text-emerald-100/90">Validades</span>
-          </Link>
+          {canEmpresa && (
+            <Link to="/empresa" className={mobileLink(linkAtivo('/empresa'))}>
+              <span>Empresa</span>
+              <span className="text-[11px] font-semibold text-emerald-100/90">Dados</span>
+            </Link>
+          )}
+          {canManageUsuarios && (
+            <Link to="/usuarios" className={mobileLink(linkAtivo('/usuarios'))}>
+              <span>Usuários</span>
+              <span className="text-[11px] font-semibold text-emerald-100/90">Admin</span>
+            </Link>
+          )}
+          {canRelatoriosMensal && (
+            <Link to="/relatorios" className={mobileLink(linkAtivo('/relatorios'))}>
+              <span>Relatórios</span>
+              <span className="text-[11px] font-semibold text-emerald-100/90">Resumo mensal</span>
+            </Link>
+          )}
+          {canRelatorioValidade && (
+            <Link to="/relatorios/validade" className={mobileLink(linkAtivo('/relatorios/validade'))}>
+              <span>Relatórios</span>
+              <span className="text-[11px] font-semibold text-emerald-100/90">Validades</span>
+            </Link>
+          )}
         </>
       )}
     </>

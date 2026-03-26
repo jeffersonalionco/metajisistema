@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { listarUsuarios, criarUsuario } from '../services/api';
+import { listarUsuarios, criarUsuario, atualizarPermissoesUsuario } from '../services/api';
 import { AppLayout } from '../components/AppLayout';
 
 function formatarData(val) {
@@ -26,8 +26,23 @@ export function Usuarios() {
   const [telefone, setTelefone] = useState('');
   const [setor, setSetor] = useState('');
   const [cargo, setCargo] = useState('');
+  const [podeDocumentacao, setPodeDocumentacao] = useState(false);
+  const [podeUsuarios, setPodeUsuarios] = useState(false);
+  const [podeRelatoriosMensal, setPodeRelatoriosMensal] = useState(false);
+  const [podeRelatorioValidade, setPodeRelatorioValidade] = useState(false);
+  const [podeEmpresa, setPodeEmpresa] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [msgSucesso, setMsgSucesso] = useState('');
+  const [modalPermissoesAberto, setModalPermissoesAberto] = useState(false);
+  const [usuarioPermissoes, setUsuarioPermissoes] = useState(null);
+  const [permissoesForm, setPermissoesForm] = useState({
+    pode_documentacao: false,
+    pode_usuarios: false,
+    pode_relatorios_mensal: false,
+    pode_relatorio_validade: false,
+    pode_empresa: false,
+  });
+  const [salvandoPermissoes, setSalvandoPermissoes] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -69,6 +84,11 @@ export function Usuarios() {
         telefone: telefone.trim() || undefined,
         setor: setor.trim() || undefined,
         cargo: cargo.trim() || undefined,
+        pode_documentacao: podeDocumentacao,
+        pode_usuarios: podeUsuarios,
+        pode_relatorios_mensal: podeRelatoriosMensal,
+        pode_relatorio_validade: podeRelatorioValidade,
+        pode_empresa: podeEmpresa,
       });
       setMsgSucesso('Usuário cadastrado com sucesso.');
       setNome('');
@@ -78,11 +98,45 @@ export function Usuarios() {
       setTelefone('');
       setSetor('');
       setCargo('');
+      setPodeDocumentacao(false);
+      setPodeUsuarios(false);
+      setPodeRelatoriosMensal(false);
+      setPodeRelatorioValidade(false);
+      setPodeEmpresa(false);
       carregar();
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao cadastrar usuário.');
     } finally {
       setEnviando(false);
+    }
+  }
+
+  function abrirModalPermissoes(usuario) {
+    setUsuarioPermissoes(usuario);
+    setPermissoesForm({
+      pode_documentacao: !!usuario.pode_documentacao,
+      pode_usuarios: !!usuario.pode_usuarios,
+      pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
+      pode_relatorio_validade: !!usuario.pode_relatorio_validade,
+      pode_empresa: !!usuario.pode_empresa,
+    });
+    setModalPermissoesAberto(true);
+  }
+
+  async function salvarPermissoes() {
+    if (!usuarioPermissoes?.id) return;
+    setSalvandoPermissoes(true);
+    setErro(null);
+    try {
+      await atualizarPermissoesUsuario(usuarioPermissoes.id, permissoesForm);
+      setMsgSucesso(`Permissões atualizadas para ${usuarioPermissoes.nome}.`);
+      setModalPermissoesAberto(false);
+      setUsuarioPermissoes(null);
+      await carregar();
+    } catch (err) {
+      setErro(err.response?.data?.erro || 'Erro ao atualizar permissões do usuário.');
+    } finally {
+      setSalvandoPermissoes(false);
     }
   }
 
@@ -192,6 +246,52 @@ export function Usuarios() {
               />
             </div>
             <div className="flex items-end">
+              <div className="w-full flex flex-col gap-2">
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={podeDocumentacao}
+                    onChange={(e) => setPodeDocumentacao(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Pode publicar/editar Documentação
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={podeUsuarios}
+                    onChange={(e) => setPodeUsuarios(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Pode gerenciar usuários
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={podeRelatoriosMensal}
+                    onChange={(e) => setPodeRelatoriosMensal(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Pode usar Resumo mensal
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={podeRelatorioValidade}
+                    onChange={(e) => setPodeRelatorioValidade(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Pode usar Relatório de validades
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={podeEmpresa}
+                    onChange={(e) => setPodeEmpresa(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Pode acessar Empresa
+                </label>
               <button
                 type="submit"
                 disabled={enviando}
@@ -199,6 +299,7 @@ export function Usuarios() {
               >
                 {enviando ? 'Cadastrando...' : 'Cadastrar'}
               </button>
+              </div>
             </div>
           </div>
         </form>
@@ -228,6 +329,7 @@ export function Usuarios() {
                   <th className="px-3 sm:px-4 py-2.5 text-left font-semibold text-slate-600 whitespace-nowrap">Admin</th>
                   <th className="px-3 sm:px-4 py-2.5 text-left font-semibold text-slate-600 whitespace-nowrap">Ativo</th>
                   <th className="px-3 sm:px-4 py-2.5 text-left font-semibold text-slate-600 whitespace-nowrap">Cadastro</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-left font-semibold text-slate-600 whitespace-nowrap">Permissões</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -242,6 +344,16 @@ export function Usuarios() {
                     <td className="px-3 sm:px-4 py-2.5">{u.admin ? 'Sim' : 'Não'}</td>
                     <td className="px-3 sm:px-4 py-2.5">{u.ativo !== false ? 'Sim' : 'Não'}</td>
                     <td className="px-3 sm:px-4 py-2.5 text-slate-500 whitespace-nowrap">{formatarData(u.criado_em)}</td>
+                    <td className="px-3 sm:px-4 py-2.5">
+                      <button
+                        type="button"
+                        disabled={u.admin}
+                        onClick={() => abrirModalPermissoes(u)}
+                        className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Permissões
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -249,6 +361,97 @@ export function Usuarios() {
           </div>
         )}
       </div>
+
+      {modalPermissoesAberto && usuarioPermissoes && (
+        <div className="fixed inset-0 z-[70]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setModalPermissoesAberto(false)}
+            aria-label="Fechar permissões"
+          />
+          <div className="relative max-w-xl mx-auto mt-10 sm:mt-16 px-3">
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
+                <h3 className="text-base font-bold text-slate-800">Permissões do usuário</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {usuarioPermissoes.nome} • {usuarioPermissoes.email}
+                </p>
+              </div>
+              <div className="p-4 space-y-3">
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3">
+                  <span className="text-sm font-medium text-slate-700">Gerenciar usuários</span>
+                  <input
+                    type="checkbox"
+                    checked={permissoesForm.pode_usuarios}
+                    onChange={(e) => setPermissoesForm((f) => ({ ...f, pode_usuarios: e.target.checked }))}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3">
+                  <span className="text-sm font-medium text-slate-700">Acessar/editar Empresa</span>
+                  <input
+                    type="checkbox"
+                    checked={permissoesForm.pode_empresa}
+                    onChange={(e) => setPermissoesForm((f) => ({ ...f, pode_empresa: e.target.checked }))}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3">
+                  <span className="text-sm font-medium text-slate-700">Resumo mensal</span>
+                  <input
+                    type="checkbox"
+                    checked={permissoesForm.pode_relatorios_mensal}
+                    onChange={(e) =>
+                      setPermissoesForm((f) => ({ ...f, pode_relatorios_mensal: e.target.checked }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3">
+                  <span className="text-sm font-medium text-slate-700">Relatório de validades</span>
+                  <input
+                    type="checkbox"
+                    checked={permissoesForm.pode_relatorio_validade}
+                    onChange={(e) =>
+                      setPermissoesForm((f) => ({ ...f, pode_relatorio_validade: e.target.checked }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3">
+                  <span className="text-sm font-medium text-slate-700">Publicar/editar Documentação</span>
+                  <input
+                    type="checkbox"
+                    checked={permissoesForm.pode_documentacao}
+                    onChange={(e) =>
+                      setPermissoesForm((f) => ({ ...f, pode_documentacao: e.target.checked }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </label>
+              </div>
+              <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalPermissoesAberto(false)}
+                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Fechar
+                </button>
+                <button
+                  type="button"
+                  disabled={salvandoPermissoes}
+                  onClick={salvarPermissoes}
+                  className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                >
+                  {salvandoPermissoes ? 'Salvando...' : 'Salvar permissões'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
