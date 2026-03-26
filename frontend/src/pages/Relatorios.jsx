@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'recharts';
 import { AppLayout } from '../components/AppLayout';
-import { analisarRelatorioExcel, salvarResumoMensal } from '../services/api';
+import { analisarRelatorioExcel, salvarResumoMensal, listarResumosMensais } from '../services/api';
 import { Link, useParams } from 'react-router-dom';
 
 function markdownToHtml(texto) {
@@ -65,6 +65,34 @@ export function Relatorios({ resultadoInicial = null, semLayout = false }) {
   const [salvando, setSalvando] = useState(false);
   const [mensagemSalvo, setMensagemSalvo] = useState('');
   const [nomeRelatorio, setNomeRelatorio] = useState('');
+  const [filtros, setFiltros] = useState({
+    data_inicio: '',
+    data_fim: '',
+    busca: '',
+  });
+  const [listaResumos, setListaResumos] = useState([]);
+  const [carregandoLista, setCarregandoLista] = useState(false);
+  const [erroLista, setErroLista] = useState('');
+
+  async function carregarResumos() {
+    setCarregandoLista(true);
+    setErroLista('');
+    try {
+      const data = await listarResumosMensais(filtros);
+      setListaResumos(data);
+    } catch (err) {
+      setErroLista(err.response?.data?.erro || 'Erro ao carregar resumos salvos.');
+    } finally {
+      setCarregandoLista(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!params.id) {
+      carregarResumos();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -160,52 +188,6 @@ export function Relatorios({ resultadoInicial = null, semLayout = false }) {
       )}
 
       {!params.id && (
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 mb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">
-            Estrutura recomendada da planilha
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 mb-2">
-            Para uma análise completa, a planilha deve conter pelo menos as colunas abaixo (com estes nomes
-            ou bem próximos):
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs sm:text-sm text-slate-700">
-            <div className="rounded-lg bg-slate-50 border border-slate-200 p-2">
-              <p className="font-semibold">Identificação do item</p>
-              <ul className="list-disc list-inside mt-1 space-y-0.5">
-                <li><strong>Código Interno</strong></li>
-                <li><strong>Código Barras</strong></li>
-                <li><strong>Descrição</strong></li>
-              </ul>
-            </div>
-            <div className="rounded-lg bg-slate-50 border border-slate-200 p-2">
-              <p className="font-semibold">Classificação</p>
-              <ul className="list-disc list-inside mt-1 space-y-0.5">
-                <li><strong>Departamento</strong></li>
-                <li><strong>Grupo</strong> (opcional, mas recomendado)</li>
-                <li><strong>Marca</strong></li>
-              </ul>
-            </div>
-            <div className="rounded-lg bg-slate-50 border border-slate-200 p-2">
-              <p className="font-semibold">Indicadores de venda</p>
-              <ul className="list-disc list-inside mt-1 space-y-0.5">
-                <li><strong>Quantidade Reg.</strong> (quantidade vendida)</li>
-                <li><strong>Quantidade Un.</strong> (registros/unidades, se houver)</li>
-                <li><strong>Venda Bruta</strong></li>
-                <li><strong>Cancelamentos</strong></li>
-                <li><strong>Acréscimos</strong></li>
-                <li><strong>Descontos</strong></li>
-                <li><strong>Venda Líquida</strong></li>
-              </ul>
-            </div>
-          </div>
-          <p className="text-xs text-slate-500 mt-3">
-            Se alguma coluna não existir, a Metaji AI ainda tentará analisar, mas quanto mais completa estiver
-            a estrutura, melhor será o resumo mensal.
-          </p>
-        </section>
-      )}
-
-      {!params.id && (
         <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 mb-4 space-y-3">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -238,6 +220,34 @@ export function Relatorios({ resultadoInicial = null, semLayout = false }) {
             </div>
           )}
         </form>
+      )}
+
+      {!params.id && (
+        <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 text-[11px] sm:text-xs shadow-sm p-3 sm:p-3 mb-4">
+          <h2 className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-700">
+            Estrutura recomendada da planilha (resumo)
+          </h2>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-1 mb-1">
+            Para uma boa análise, é ideal que a planilha tenha pelo menos:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] sm:text-xs text-slate-700">
+            <div>
+              <p className="font-semibold">Identificação</p>
+              <p>Código Interno, Código Barras, Descrição.</p>
+            </div>
+            <div>
+              <p className="font-semibold">Classificação</p>
+              <p>Departamento, Grupo (opcional), Marca.</p>
+            </div>
+            <div>
+              <p className="font-semibold">Vendas</p>
+              <p>Qtd. Reg., Venda Bruta, Cancelamentos, Acréscimos, Descontos, Venda Líquida.</p>
+            </div>
+          </div>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-2">
+            Mesmo sem todas as colunas, a Metaji AI ainda tentará gerar um bom resumo mensal.
+          </p>
+        </section>
       )}
 
       {resultado && (
@@ -517,6 +527,124 @@ export function Relatorios({ resultadoInicial = null, semLayout = false }) {
             </dl>
           </section>
         </div>
+      )}
+
+      {!params.id && (
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 mt-4">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">
+                Resumos já salvos
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Busque resumos mensais anteriores pelo nome, arquivo ou intervalo de datas.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <button
+                type="button"
+                onClick={carregarResumos}
+                className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Atualizar lista
+              </button>
+            </div>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              carregarResumos();
+            }}
+            className="mt-3 grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs sm:text-sm"
+          >
+            <div>
+              <label className="block mb-1 text-[11px] font-medium text-slate-600">Data inicial</label>
+              <input
+                type="date"
+                value={filtros.data_inicio}
+                onChange={(e) => setFiltros((f) => ({ ...f, data_inicio: e.target.value }))}
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs sm:text-sm text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-[11px] font-medium text-slate-600">Data final</label>
+              <input
+                type="date"
+                value={filtros.data_fim}
+                onChange={(e) => setFiltros((f) => ({ ...f, data_fim: e.target.value }))}
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs sm:text-sm text-slate-800"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block mb-1 text-[11px] font-medium text-slate-600">
+                Buscar por nome do relatório ou arquivo
+              </label>
+              <input
+                type="text"
+                value={filtros.busca}
+                onChange={(e) => setFiltros((f) => ({ ...f, busca: e.target.value }))}
+                placeholder="Ex.: Março/2026, Superama, planilha_fevereiro.xlsx"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs sm:text-sm text-slate-800"
+              />
+            </div>
+            <div className="sm:col-span-4 flex justify-end mt-1">
+              <button
+                type="submit"
+                className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-emerald-700"
+              >
+                Filtrar
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-3 border-t border-slate-200 pt-3">
+            {erroLista && (
+              <p className="text-xs text-red-600 mb-2">{erroLista}</p>
+            )}
+            {carregandoLista ? (
+              <p className="text-xs text-slate-500">Carregando resumos...</p>
+            ) : listaResumos.length === 0 ? (
+              <p className="text-xs text-slate-500">Nenhum resumo encontrado para os filtros informados.</p>
+            ) : (
+              <ul className="divide-y divide-slate-200 text-xs sm:text-sm">
+                {listaResumos.map((r) => (
+                  <li key={r.id} className="py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                    <div>
+                      <p className="font-medium text-slate-800 break-words">
+                        {r.nome_relatorio || 'Resumo sem nome'}
+                      </p>
+                      <p className="text-[11px] sm:text-xs text-slate-500">
+                        Arquivo: <span className="font-medium">{r.nome_arquivo}</span>
+                      </p>
+                      {r.periodo && (
+                        <p className="text-[11px] sm:text-xs text-slate-500">Período: {r.periodo}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start sm:items-end gap-1">
+                      <p className="text-[11px] sm:text-xs text-slate-500">
+                        Gerado em:{' '}
+                        {new Date(r.criado_em).toLocaleString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                      <Link
+                        to={`/resumo-mensal/${r.id}`}
+                        className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] sm:text-xs font-medium text-white hover:bg-emerald-700"
+                      >
+                        Abrir resumo
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
       )}
     </>
   );

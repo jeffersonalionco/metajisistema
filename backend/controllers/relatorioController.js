@@ -2,6 +2,7 @@ import multer from 'multer';
 import xlsx from 'xlsx';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { query } from '../dbMetaji.js';
+import { query as queryErp } from '../db.js';
 
 // Configuração do multer: mantém arquivo em memória (buffer)
 const upload = multer({
@@ -400,6 +401,157 @@ export async function obterResumoMensal(req, res) {
   } catch (err) {
     console.error('Erro em obterResumoMensal:', err);
     res.status(500).json({ erro: 'Erro ao carregar resumo mensal.' });
+  }
+}
+
+export async function listarResumosMensais(req, res) {
+  try {
+    const usuarioId = req.usuario?.id;
+    if (!usuarioId) {
+      return res.status(401).json({ erro: 'Usuário não autenticado' });
+    }
+
+    const { data_inicio, data_fim, busca } = req.query || {};
+
+    const params = [usuarioId];
+    const condicoes = ['usuario_id = $1'];
+
+    if (data_inicio) {
+      params.push(data_inicio);
+      condicoes.push(`criado_em::date >= $${params.length}`);
+    }
+    if (data_fim) {
+      params.push(data_fim);
+      condicoes.push(`criado_em::date <= $${params.length}`);
+    }
+    if (busca) {
+      params.push(`%${busca}%`);
+      const idx = params.length;
+      condicoes.push(
+        `(coalesce(nome_relatorio, '') ILIKE $${idx} OR coalesce(nome_arquivo, '') ILIKE $${idx})`,
+      );
+    }
+
+    const where = condicoes.length ? `WHERE ${condicoes.join(' AND ')}` : '';
+
+    const sql = `
+      SELECT id, nome_arquivo, nome_relatorio, periodo, criado_em
+      FROM public.resumos_mensais
+      ${where}
+      ORDER BY criado_em DESC
+      LIMIT 100
+    `;
+
+    const result = await query(sql, params);
+
+    res.json(
+      result.rows.map((row) => ({
+        id: row.id,
+        nome_arquivo: row.nome_arquivo,
+        nome_relatorio: row.nome_relatorio,
+        periodo: row.periodo,
+        criado_em: row.criado_em,
+      })),
+    );
+  } catch (err) {
+    console.error('Erro em listarResumosMensais:', err);
+    res.status(500).json({ erro: 'Erro ao listar resumos mensais.' });
+  }
+}
+
+export async function relatorioValidades(req, res) {
+  try {
+    const { data_valid_ini, data_valid_fim, unidade, fornecedor, apenas_vencidos, ate_dias } =
+      req.query || {};
+
+    const condicoes = ['r.recm_validade IS NOT NULL'];
+    const params = [];
+
+    if (data_valid_ini) {
+      params.push(data_valid_ini);
+      condicoes.push(`r.recm_validade >= $${params.length}`);
+    }
+    if (data_valid_fim) {
+      params.push(data_valid_fim);
+      condicoes.push(`r.recm_validade <= $${params.length}`);
+    }
+    if (unidade) {
+      params.push(unidade);
+      condicoes.push(`r.recm_unid_codigo = $${params.length}`);
+    }
+    if (fornecedor) {
+      params.push(fornecedor);
+      condicoes.push(`r.recm_codentidade = $${params.length}`);
+    }
+
+    // filtro de vencidos / até X dias
+    if (apenas_vencidos === 'true') {
+      condicoes.push('r.recm_validade < CURRENT_DATE');
+    } else if (ate_dias && Number(ate_dias) > 0) {
+      params.push(Number(ate_dias));
+      condicoes.push(
+        `r.recm_validade >= CURRENT_DATE AND r.recm_validade <= CURRENT_DATE + ($${params.length} || ' days')::interval`,
+      );
+    }
+
+    const where = condicoes.length ? `WHERE ${condicoes.join(' AND ')}` : '';
+
+    const sql = `
+      SELECT
+        r.recm_prod_codigo,
+        p.prod_descricao,
+        u.prun_estoque1,
+        r.recm_unid_codigo,
+        r.recm_validade,
+        r.recm_data,
+        r.recm_qtde,
+        r.recm_lote,
+        r.recm_dcto,
+        r.recm_status,
+        r.recm_codentidade,
+        r.recm_catentidade,
+        (r.recm_validade - CURRENT_DATE) AS dias_para_vencer,
+        (
+          SELECT COALESCE(SUM(r2.recm_qtde), 0)
+          FROM public.recmerc r2
+          JOIN public.movprodc m2 ON m2.mprc_transacao = r2.recm_transacao
+          WHERE r2.recm_prod_codigo = r.recm_prod_codigo
+            AND r2.recm_unid_codigo = r.recm_unid_codigo
+            AND m2.mprc_es = 'S'
+        ) AS saidas_periodo
+      FROM public.recmerc r
+      LEFT JOIN public.produtos p ON p.prod_codigo = r.recm_prod_codigo
+      LEFT JOIN public.produn u
+        ON u.prun_prod_codigo = r.recm_prod_codigo
+       AND u.prun_unid_codigo = r.recm_unid_codigo
+      ${where}
+      ORDER BY r.recm_validade ASC, p.prod_descricao ASC NULLS LAST
+      LIMIT 500
+    `;
+
+    const result = await queryErp(sql, params);
+
+    res.json(
+      result.rows.map((row) => ({
+        prod_codigo: row.recm_prod_codigo,
+        descricao: row.prod_descricao,
+        estoque_atual: row.prun_estoque1,
+        unidade: row.recm_unid_codigo,
+        validade: row.recm_validade,
+        data_entrada: row.recm_data,
+        quantidade: row.recm_qtde,
+        lote: row.recm_lote,
+        documento: row.recm_dcto,
+        status: row.recm_status,
+        codentidade: row.recm_codentidade,
+        catentidade: row.recm_catentidade,
+        dias_para_vencer: row.dias_para_vencer,
+        saidas_periodo: row.saidas_periodo,
+      })),
+    );
+  } catch (err) {
+    console.error('Erro em relatorioValidades:', err);
+    res.status(500).json({ erro: 'Erro ao gerar relatório de validades.' });
   }
 }
 

@@ -114,6 +114,29 @@ export async function initMetajiSchema() {
     await client.query(`
       INSERT INTO public.empresa (id) VALUES (1) ON CONFLICT (id) DO NOTHING
     `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS public.documentacao_posts (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL REFERENCES public.usuarios(id),
+        categoria VARCHAR(80) NOT NULL,
+        titulo VARCHAR(160) NOT NULL,
+        descricao VARCHAR(400),
+        conteudo TEXT,
+        ativo BOOLEAN DEFAULT true,
+        criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_documentacao_posts_categoria ON public.documentacao_posts (categoria)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_documentacao_posts_criado_em ON public.documentacao_posts (criado_em DESC)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_documentacao_posts_ativo ON public.documentacao_posts (ativo)
+    `);
   } finally {
     client.release();
   }

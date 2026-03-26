@@ -7,7 +7,10 @@ import { Usuarios } from './pages/Usuarios';
 import { Empresa } from './pages/Empresa';
 import { FichaCadastral } from './pages/FichaCadastral';
 import { Relatorios } from './pages/Relatorios';
+import { RelatorioValidades } from './pages/RelatorioValidades';
 import { ResumoMensalDetalhe } from './pages/ResumoMensalDetalhe';
+import { Documentacao } from './pages/Documentacao';
+import { DocumentacaoDetalhe } from './pages/DocumentacaoDetalhe';
 
 function RotasProtegidas({ children }) {
   const { isAuthenticated, carregando } = useAuth();
@@ -71,6 +74,32 @@ export default function App() {
             <RotaAdmin>
               <Relatorios />
             </RotaAdmin>
+          </RotasProtegidas>
+        }
+      />
+      <Route
+        path="/relatorios/validade"
+        element={
+          <RotasProtegidas>
+            <RotaAdmin>
+              <RelatorioValidades />
+            </RotaAdmin>
+          </RotasProtegidas>
+        }
+      />
+      <Route
+        path="/documentacao"
+        element={
+          <RotasProtegidas>
+            <Documentacao />
+          </RotasProtegidas>
+        }
+      />
+      <Route
+        path="/documentacao/:id"
+        element={
+          <RotasProtegidas>
+            <DocumentacaoDetalhe />
           </RotasProtegidas>
         }
       />

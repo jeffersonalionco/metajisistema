@@ -10,7 +10,16 @@ import {
   analisarRelatorio,
   salvarResumoMensal,
   obterResumoMensal,
+  listarResumosMensais,
+  relatorioValidades,
 } from '../controllers/relatorioController.js';
+import {
+  listarPosts,
+  obterPost,
+  criarPost,
+  atualizarPost,
+  excluirPost,
+} from '../controllers/documentacaoController.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import authRoutes from './authRoutes.js';
 
@@ -43,6 +52,15 @@ router.post(
   requireAdmin,
   salvarResumoMensal,
 );
+router.get('/relatorios', requireAuth, requireAdmin, listarResumosMensais);
+router.get('/relatorios/validade', requireAuth, requireAdmin, relatorioValidades);
 router.get('/relatorios/:id', obterResumoMensal);
+
+// Documentação da empresa
+router.get('/documentacao', requireAuth, listarPosts);
+router.get('/documentacao/:id', requireAuth, obterPost);
+router.post('/documentacao', requireAuth, requireAdmin, criarPost);
+router.put('/documentacao/:id', requireAuth, requireAdmin, atualizarPost);
+router.delete('/documentacao/:id', requireAuth, requireAdmin, excluirPost);
 
 export default router;

@@ -19,3 +19,23 @@ body {
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  .relatorio-validades-pagina {
+    width: 260mm;
+    margin: 0 auto;
+  }
+
+  .relatorio-validades-pagina table {
+    font-size: 9px;
+  }
+}

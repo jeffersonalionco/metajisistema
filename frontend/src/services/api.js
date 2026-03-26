@@ -100,3 +100,53 @@ export async function obterResumoMensal(id) {
   const { data } = await api.get(`/relatorios/${id}`);
   return data;
 }
+
+export async function listarResumosMensais(filtros = {}) {
+  const params = {};
+  if (filtros.data_inicio) params.data_inicio = filtros.data_inicio;
+  if (filtros.data_fim) params.data_fim = filtros.data_fim;
+  if (filtros.busca) params.busca = filtros.busca;
+  const { data } = await api.get('/relatorios', { params });
+  return data;
+}
+
+export async function listarValidades(filtros = {}) {
+  const params = {};
+  if (filtros.data_valid_ini) params.data_valid_ini = filtros.data_valid_ini;
+  if (filtros.data_valid_fim) params.data_valid_fim = filtros.data_valid_fim;
+  if (filtros.unidade) params.unidade = filtros.unidade;
+  if (filtros.fornecedor) params.fornecedor = filtros.fornecedor;
+  if (filtros.apenas_vencidos) params.apenas_vencidos = filtros.apenas_vencidos;
+  if (filtros.ate_dias) params.ate_dias = filtros.ate_dias;
+  const { data } = await api.get('/relatorios/validade', { params });
+  return data;
+}
+
+export async function listarDocumentacao(filtros = {}) {
+  const params = {};
+  if (filtros.categoria) params.categoria = filtros.categoria;
+  if (filtros.busca) params.busca = filtros.busca;
+  if (filtros.apenas_ativos !== undefined) params.apenas_ativos = filtros.apenas_ativos;
+  const { data } = await api.get('/documentacao', { params });
+  return data;
+}
+
+export async function criarPostDocumentacao(dados) {
+  const { data } = await api.post('/documentacao', dados);
+  return data;
+}
+
+export async function atualizarPostDocumentacao(id, dados) {
+  const { data } = await api.put(`/documentacao/${id}`, dados);
+  return data;
+}
+
+export async function excluirPostDocumentacao(id) {
+  const { data } = await api.delete(`/documentacao/${id}`);
+  return data;
+}
+
+export async function obterPostDocumentacao(id) {
+  const { data } = await api.get(`/documentacao/${id}`);
+  return data;
+}
