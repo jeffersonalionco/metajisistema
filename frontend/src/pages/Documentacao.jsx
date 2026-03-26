@@ -99,6 +99,7 @@ export function Documentacao() {
   const [modalAberto, setModalAberto] = useState(false);
   const [editando, setEditando] = useState(null);
   const [salvando, setSalvando] = useState(false);
+  const [mostrarPreview, setMostrarPreview] = useState(false);
   const [form, setForm] = useState({
     categoria: '',
     titulo: '',
@@ -212,6 +213,19 @@ export function Documentacao() {
     setErro('');
     try {
       await excluirPostDocumentacao(p.id);
+      await carregar();
+    } catch (err) {
+      setErro(err.response?.data?.erro || 'Erro ao excluir post.');
+    }
+  }
+
+  async function excluirPostEmEdicao() {
+    if (!editando) return;
+    const ok = window.confirm(`Excluir o post "${editando.titulo}"?`);
+    if (!ok) return;
+    try {
+      await excluirPostDocumentacao(editando.id);
+      setModalAberto(false);
       await carregar();
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao excluir post.');
@@ -434,21 +448,37 @@ export function Documentacao() {
             aria-label="Fechar"
             onClick={() => setModalAberto(false)}
           />
-          <div className="relative max-w-2xl mx-auto mt-10 sm:mt-16 px-3">
-            <div className="rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-800">
-                  {editando ? 'Editar post' : 'Novo post'}
-                </h3>
-                <button
-                  type="button"
-                  className="rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100"
-                  onClick={() => setModalAberto(false)}
-                >
-                  ✕
-                </button>
+          <div className="relative h-full w-full p-0 sm:p-3">
+            <div className="h-full w-full rounded-none sm:rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+              <div className="px-4 sm:px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base sm:text-lg font-extrabold text-slate-800">
+                    {editando ? 'Editar post' : 'Novo post'}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Editor completo de documentação
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {editando && (
+                    <button
+                      type="button"
+                      onClick={excluirPostEmEdicao}
+                      className="inline-flex items-center rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                    >
+                      Apagar
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100"
+                    onClick={() => setModalAberto(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
-              <div className="p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-600 mb-1">
@@ -540,15 +570,62 @@ export function Documentacao() {
                     >
                       Imagem
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => inserirLinha('<table style="border-collapse: collapse; width: 100%;"><tr><th style="background:#0f766e;color:#fff;padding:8px;border:1px solid #ccc;">Coluna</th><th style="background:#134e4a;color:#fff;padding:8px;border:1px solid #ccc;">Valor</th></tr><tr><td style="padding:8px;border:1px solid #ccc;">Exemplo</td><td style="padding:8px;border:1px solid #ccc;">123</td></tr></table>')}
+                      className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      title="Tabela colorida (HTML)"
+                    >
+                      Tabela colorida
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMostrarPreview((v) => !v)}
+                      className="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                      title="Alternar preview"
+                    >
+                      {mostrarPreview ? 'Ocultar preview' : 'Mostrar preview'}
+                    </button>
                   </div>
-                  <textarea
-                    ref={textareaRef}
-                    value={form.conteudo}
-                    onChange={(e) => setForm((f) => ({ ...f, conteudo: e.target.value }))}
-                    rows={8}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 whitespace-pre-wrap"
-                    placeholder="Escreva aqui usando Markdown. Ex.: **negrito**, *itálico*, <u>sublinhado</u>, listas, e --- para divisor."
-                  />
+                  <div className={`grid gap-3 ${mostrarPreview ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
+                    <textarea
+                      ref={textareaRef}
+                      value={form.conteudo}
+                      onChange={(e) => setForm((f) => ({ ...f, conteudo: e.target.value }))}
+                      rows={22}
+                      className="w-full min-h-[50vh] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 whitespace-pre-wrap leading-relaxed"
+                      placeholder="Escreva aqui usando Markdown. Ex.: **negrito**, *itálico*, <u>sublinhado</u>, listas, e --- para divisor."
+                    />
+                    {mostrarPreview && (
+                      <div className="min-h-[50vh] rounded-lg border border-slate-200 bg-slate-50 p-3 overflow-auto">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                          Preview do post
+                        </p>
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[[rehypeRaw], [rehypeSanitize, schemaPreview]]}
+                          components={{
+                            p: (props) => <p {...props} className="mt-2 first:mt-0 text-sm text-slate-800 leading-relaxed" />,
+                            h1: (props) => <h1 {...props} className="text-xl font-extrabold mt-3 first:mt-0 text-slate-900" />,
+                            h2: (props) => <h2 {...props} className="text-lg font-bold mt-3 first:mt-0 text-slate-900" />,
+                            h3: (props) => <h3 {...props} className="text-base font-bold mt-3 first:mt-0 text-slate-900" />,
+                            ul: (props) => <ul {...props} className="list-disc pl-5 mt-2 space-y-1" />,
+                            ol: (props) => <ol {...props} className="list-decimal pl-5 mt-2 space-y-1" />,
+                            table: (props) => (
+                              <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                                <table {...props} className="min-w-full text-xs" />
+                              </div>
+                            ),
+                            th: (props) => <th {...props} className="px-2 py-1.5 border-b border-slate-200 text-left font-semibold" />,
+                            td: (props) => <td {...props} className="px-2 py-1.5 border-b border-slate-100 align-top" />,
+                            pre: (props) => <pre {...props} className="mt-3 rounded-lg bg-slate-900 text-slate-100 p-3 overflow-x-auto text-xs" />,
+                          }}
+                        >
+                          {form.conteudo || '_Escreva o conteúdo para visualizar o preview._'}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
                   <p className="mt-2 text-[11px] text-slate-500">
                     Dica: você pode usar Markdown (títulos, listas, links). O sistema também aceita <code>&lt;u&gt;</code> para sublinhado.
                   </p>
@@ -564,13 +641,17 @@ export function Documentacao() {
                   Ativo (visível para os usuários)
                 </label>
               </div>
-              <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+              <div className="px-4 sm:px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-500">
+                  {form.conteudo?.length || 0} caracteres
+                </span>
+                <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setModalAberto(false)}
                   className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  Cancelar
+                  Fechar
                 </button>
                 <button
                   type="button"
@@ -578,8 +659,9 @@ export function Documentacao() {
                   onClick={salvar}
                   className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                 >
-                  {salvando ? 'Salvando...' : 'Salvar'}
+                  {salvando ? 'Publicando...' : editando ? 'Salvar alterações' : 'Publicar post'}
                 </button>
+                </div>
               </div>
             </div>
           </div>
