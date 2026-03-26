@@ -20,6 +20,11 @@ import {
   atualizarPost,
   excluirPost,
 } from '../controllers/documentacaoController.js';
+import {
+  obterConfigDocumentacaoIA,
+  salvarConfigDocumentacaoIA,
+  conversarComDocumentacaoIA,
+} from '../controllers/documentacaoIAController.js';
 import { requireAuth, requireAdmin, requireDocumentacaoEditor, requirePermissao } from '../middleware/auth.js';
 import authRoutes from './authRoutes.js';
 
@@ -60,6 +65,9 @@ router.get('/relatorios/:id', obterResumoMensal);
 
 // Documentação da empresa
 router.get('/documentacao', requireAuth, listarPosts);
+router.get('/documentacao/ia/config', requireAuth, requireAdmin, obterConfigDocumentacaoIA);
+router.put('/documentacao/ia/config', requireAuth, requireAdmin, salvarConfigDocumentacaoIA);
+router.post('/documentacao/ia/chat', requireAuth, conversarComDocumentacaoIA);
 router.get('/documentacao/:id', requireAuth, obterPost);
 router.post('/documentacao', requireAuth, requireDocumentacaoEditor, criarPost);
 router.put('/documentacao/:id', requireAuth, requireDocumentacaoEditor, atualizarPost);

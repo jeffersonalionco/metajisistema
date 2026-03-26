@@ -161,6 +161,21 @@ export async function initMetajiSchema() {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_documentacao_posts_ativo ON public.documentacao_posts (ativo)
     `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS public.documentacao_ia_config (
+        id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        ativo BOOLEAN DEFAULT true,
+        model VARCHAR(80),
+        prompt_base TEXT,
+        max_posts_contexto INTEGER DEFAULT 8,
+        atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`
+      INSERT INTO public.documentacao_ia_config (id, ativo, max_posts_contexto)
+      VALUES (1, true, 8)
+      ON CONFLICT (id) DO NOTHING
+    `);
   } finally {
     client.release();
   }

@@ -160,3 +160,18 @@ export async function obterPostDocumentacao(id) {
   const { data } = await api.get(`/documentacao/${id}`);
   return data;
 }
+
+export async function obterConfigIADocumentacao() {
+  const { data } = await api.get('/documentacao/ia/config');
+  return data;
+}
+
+export async function salvarConfigIADocumentacao(payload) {
+  const { data } = await api.put('/documentacao/ia/config', payload);
+  return data;
+}
+
+export async function conversarIADocumentacao(payload) {
+  const { data } = await api.post('/documentacao/ia/chat', payload, { timeout: 60000 });
+  return data;
+}

@@ -12,6 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
+import { DocumentacaoIAWidget } from '../components/DocumentacaoIAWidget';
 
 function formatarData(dt) {
   if (!dt) return '';
@@ -667,6 +668,7 @@ export function Documentacao() {
           </div>
         </div>
       )}
+      <DocumentacaoIAWidget categorias={categorias} />
     </AppLayout>
   );
 }
