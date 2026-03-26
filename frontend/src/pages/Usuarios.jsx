@@ -31,6 +31,7 @@ export function Usuarios() {
   const [podeRelatoriosMensal, setPodeRelatoriosMensal] = useState(false);
   const [podeRelatorioValidade, setPodeRelatorioValidade] = useState(false);
   const [podeEmpresa, setPodeEmpresa] = useState(false);
+  const [podeReceitas, setPodeReceitas] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [msgSucesso, setMsgSucesso] = useState('');
   const [modalPermissoesAberto, setModalPermissoesAberto] = useState(false);
@@ -41,6 +42,7 @@ export function Usuarios() {
     pode_relatorios_mensal: false,
     pode_relatorio_validade: false,
     pode_empresa: false,
+    pode_receitas: true,
   });
   const [salvandoPermissoes, setSalvandoPermissoes] = useState(false);
 
@@ -89,6 +91,7 @@ export function Usuarios() {
         pode_relatorios_mensal: podeRelatoriosMensal,
         pode_relatorio_validade: podeRelatorioValidade,
         pode_empresa: podeEmpresa,
+        pode_receitas: podeReceitas,
       });
       setMsgSucesso('Usuário cadastrado com sucesso.');
       setNome('');
@@ -103,6 +106,7 @@ export function Usuarios() {
       setPodeRelatoriosMensal(false);
       setPodeRelatorioValidade(false);
       setPodeEmpresa(false);
+      setPodeReceitas(true);
       carregar();
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao cadastrar usuário.');
@@ -119,6 +123,7 @@ export function Usuarios() {
       pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
       pode_relatorio_validade: !!usuario.pode_relatorio_validade,
       pode_empresa: !!usuario.pode_empresa,
+      pode_receitas: !!usuario.pode_receitas,
     });
     setModalPermissoesAberto(true);
   }
@@ -292,6 +297,15 @@ export function Usuarios() {
                   />
                   Pode acessar Empresa
                 </label>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={podeReceitas}
+                    onChange={(e) => setPodeReceitas(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Pode acessar Receitas
+                </label>
               <button
                 type="submit"
                 disabled={enviando}
@@ -415,6 +429,17 @@ export function Usuarios() {
                     checked={permissoesForm.pode_relatorio_validade}
                     onChange={(e) =>
                       setPermissoesForm((f) => ({ ...f, pode_relatorio_validade: e.target.checked }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3">
+                  <span className="text-sm font-medium text-slate-700">Acessar Receitas</span>
+                  <input
+                    type="checkbox"
+                    checked={permissoesForm.pode_receitas}
+                    onChange={(e) =>
+                      setPermissoesForm((f) => ({ ...f, pode_receitas: e.target.checked }))
                     }
                     className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                   />

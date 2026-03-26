@@ -18,7 +18,7 @@ export async function requireAuth(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET);
     const result = await query(
       `SELECT id, nome, email, ativo, admin,
-              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa, pode_receitas,
               cpf, telefone, setor, cargo
        FROM public.usuarios
        WHERE id = $1`,

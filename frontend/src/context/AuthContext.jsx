@@ -81,6 +81,7 @@ export function AuthProvider({ children }) {
     canRelatoriosMensal: !!usuario?.admin || !!usuario?.pode_relatorios_mensal,
     canRelatorioValidade: !!usuario?.admin || !!usuario?.pode_relatorio_validade,
     canEmpresa: !!usuario?.admin || !!usuario?.pode_empresa,
+    canReceitas: !!usuario?.admin || !!usuario?.pode_receitas,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

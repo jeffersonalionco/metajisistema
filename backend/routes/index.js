@@ -27,10 +27,10 @@ const router = Router();
 
 router.use(authRoutes);
 
-router.get('/buscar', requireAuth, buscarProdutos);
-router.get('/produto/:codigo', requireAuth, getProduto);
-router.patch('/produto/:codigo/obs', requireAuth, atualizarObs);
-router.get('/receita/:codigo', requireAuth, getReceita);
+router.get('/buscar', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para acessar Receitas'), buscarProdutos);
+router.get('/produto/:codigo', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para acessar Receitas'), getProduto);
+router.patch('/produto/:codigo/obs', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para editar Receitas'), atualizarObs);
+router.get('/receita/:codigo', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para acessar Receitas'), getReceita);
 
 router.get('/empresa', requireAuth, requirePermissao('pode_empresa', 'Sem permissão para acessar Empresa'), getEmpresa);
 router.put('/empresa', requireAuth, requirePermissao('pode_empresa', 'Sem permissão para editar Empresa'), updateEmpresa);

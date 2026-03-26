@@ -26,7 +26,7 @@ export async function login(req, res) {
 
     const result = await query(
       `SELECT id, nome, email, senha, ativo, admin,
-              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa, pode_receitas,
               cpf, telefone, setor, cargo
        FROM public.usuarios
        WHERE email = $1`,
@@ -60,6 +60,7 @@ export async function login(req, res) {
         pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
         pode_relatorio_validade: !!usuario.pode_relatorio_validade,
         pode_empresa: !!usuario.pode_empresa,
+        pode_receitas: !!usuario.pode_receitas,
         cpf: usuario.cpf || null,
         telefone: usuario.telefone || null,
         setor: usuario.setor || null,
@@ -101,7 +102,7 @@ export async function registro(req, res) {
 
     const result = await query(
       `SELECT id, nome, email, admin,
-              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa, pode_receitas,
               cpf, telefone, setor, cargo
        FROM public.usuarios WHERE email = $1`,
       [emailNorm]
@@ -120,6 +121,7 @@ export async function registro(req, res) {
         pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
         pode_relatorio_validade: !!usuario.pode_relatorio_validade,
         pode_empresa: !!usuario.pode_empresa,
+        pode_receitas: !!usuario.pode_receitas,
         cpf: usuario.cpf || null,
         telefone: usuario.telefone || null,
         setor: usuario.setor || null,
@@ -156,6 +158,7 @@ export async function me(req, res) {
         pode_relatorios_mensal: !!usuario.pode_relatorios_mensal,
         pode_relatorio_validade: !!usuario.pode_relatorio_validade,
         pode_empresa: !!usuario.pode_empresa,
+        pode_receitas: !!usuario.pode_receitas,
         cpf: usuario.cpf || null,
         telefone: usuario.telefone || null,
         setor: usuario.setor || null,

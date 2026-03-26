@@ -28,13 +28,13 @@ function RotasProtegidas({ children }) {
   return children;
 }
 
-function RotaPermissao({ allow, children }) {
-  if (!allow) return <Navigate to="/" replace />;
+function RotaPermissao({ allow, children, fallback = '/documentacao' }) {
+  if (!allow) return <Navigate to={fallback} replace />;
   return children;
 }
 
 export default function App() {
-  const { canManageUsuarios, canEmpresa, canRelatoriosMensal, canRelatorioValidade } = useAuth();
+  const { canManageUsuarios, canEmpresa, canRelatoriosMensal, canRelatorioValidade, canReceitas } = useAuth();
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -43,7 +43,9 @@ export default function App() {
         path="/"
         element={
           <RotasProtegidas>
-            <Receitas />
+            <RotaPermissao allow={canReceitas}>
+              <Receitas />
+            </RotaPermissao>
           </RotasProtegidas>
         }
       />

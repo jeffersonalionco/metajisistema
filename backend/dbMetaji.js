@@ -98,6 +98,10 @@ export async function initMetajiSchema() {
       ADD COLUMN IF NOT EXISTS pode_empresa BOOLEAN DEFAULT false
     `);
     await client.query(`
+      ALTER TABLE public.usuarios
+      ADD COLUMN IF NOT EXISTS pode_receitas BOOLEAN DEFAULT true
+    `);
+    await client.query(`
       CREATE TABLE IF NOT EXISTS public.modo_preparo_alteracoes (
         indc_prod_codigo NUMERIC(8,0) PRIMARY KEY,
         usuario_id INTEGER NOT NULL REFERENCES public.usuarios(id),

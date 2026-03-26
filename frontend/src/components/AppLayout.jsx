@@ -11,6 +11,7 @@ export function AppLayout({ children }) {
     canManageUsuarios,
     canRelatoriosMensal,
     canRelatorioValidade,
+    canReceitas,
   } = useAuth();
   const location = useLocation();
   const [empresa, setEmpresa] = useState(null);
@@ -70,9 +71,11 @@ export function AppLayout({ children }) {
 
   const desktopNavLinks = (
     <>
-      <Link to="/" className={desktopLink(linkAtivo('/'))}>
-        Receitas
-      </Link>
+      {canReceitas && (
+        <Link to="/" className={desktopLink(linkAtivo('/'))}>
+          Receitas
+        </Link>
+      )}
       <Link to="/documentacao" className={desktopLink(linkAtivo('/documentacao'))}>
         Documentação
       </Link>
@@ -152,10 +155,12 @@ export function AppLayout({ children }) {
 
   const mobileNavLinks = (
     <>
-      <Link to="/" className={mobileLink(linkAtivo('/'))}>
-        <span>Receitas</span>
-        <span className="text-[11px] font-semibold text-emerald-100/90">Ver</span>
-      </Link>
+      {canReceitas && (
+        <Link to="/" className={mobileLink(linkAtivo('/'))}>
+          <span>Receitas</span>
+          <span className="text-[11px] font-semibold text-emerald-100/90">Ver</span>
+        </Link>
+      )}
       <Link to="/documentacao" className={mobileLink(linkAtivo('/documentacao'))}>
         <span>Documentação</span>
         <span className="text-[11px] font-semibold text-emerald-100/90">Posts</span>

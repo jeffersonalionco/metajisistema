@@ -10,6 +10,7 @@ export async function listar(req, res) {
     const result = await query(
       `SELECT id, nome, email, cpf, telefone, setor, cargo, ativo, admin,
               pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              pode_receitas,
               criado_em
        FROM public.usuarios
        ORDER BY nome`
@@ -40,12 +41,14 @@ export async function criar(req, res) {
       pode_relatorios_mensal,
       pode_relatorio_validade,
       pode_empresa,
+      pode_receitas,
     } = req.body || {};
     const podeDoc = pode_documentacao === true;
     const podeUsuarios = pode_usuarios === true;
     const podeRelMensal = pode_relatorios_mensal === true;
     const podeRelValidade = pode_relatorio_validade === true;
     const podeEmpresa = pode_empresa === true;
+    const podeReceitas = pode_receitas !== false;
     if (!nome?.trim() || !email?.trim() || !senha) {
       return res.status(400).json({ erro: 'Nome completo, e-mail e senha são obrigatórios' });
     }
@@ -63,9 +66,9 @@ export async function criar(req, res) {
     await query(
       `INSERT INTO public.usuarios (
          nome, email, senha, cpf, telefone, setor, cargo,
-         pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa
+         pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa, pode_receitas
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [
         nome.trim(),
         emailNorm,
@@ -79,12 +82,14 @@ export async function criar(req, res) {
         podeRelMensal,
         podeRelValidade,
         podeEmpresa,
+        podeReceitas,
       ]
     );
 
     const result = await query(
       `SELECT id, nome, email, cpf, telefone, setor, cargo, ativo, admin,
               pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa,
+              pode_receitas,
               criado_em
        FROM public.usuarios WHERE email = $1`,
       [emailNorm]
@@ -135,6 +140,7 @@ export async function atualizarPermissoesUsuario(req, res) {
       pode_relatorios_mensal,
       pode_relatorio_validade,
       pode_empresa,
+      pode_receitas,
     } = req.body || {};
 
     const campos = [
@@ -143,6 +149,7 @@ export async function atualizarPermissoesUsuario(req, res) {
       ['pode_relatorios_mensal', pode_relatorios_mensal],
       ['pode_relatorio_validade', pode_relatorio_validade],
       ['pode_empresa', pode_empresa],
+      ['pode_receitas', pode_receitas],
     ].filter(([, valor]) => typeof valor === 'boolean');
 
     if (campos.length === 0) {
@@ -157,7 +164,7 @@ export async function atualizarPermissoesUsuario(req, res) {
        SET ${sets}
        WHERE id = $1
        RETURNING id, nome, email, cpf, telefone, setor, cargo, ativo, admin,
-                 pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa, criado_em`,
+                 pode_documentacao, pode_usuarios, pode_relatorios_mensal, pode_relatorio_validade, pode_empresa, pode_receitas, criado_em`,
       params,
     );
 
