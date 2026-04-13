@@ -21,11 +21,8 @@ body {
 }
 
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
-  }
-
+  /* Padrão: não forçar orientação global (deixe o usuário escolher no diálogo).
+     Estilos específicos de relatórios devem ficar no próprio componente/página. */
   body {
     background: #ffffff !important;
   }

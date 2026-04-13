@@ -241,6 +241,14 @@ export function RelatorioValidades() {
         )}
       </section>
       </div>
+      <style>{`
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
+        }
+      `}</style>
     </AppLayout>
   );
 }
