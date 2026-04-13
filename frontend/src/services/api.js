@@ -175,3 +175,21 @@ export async function conversarIADocumentacao(payload) {
   const { data } = await api.post('/documentacao/ia/chat', payload, { timeout: 60000 });
   return data;
 }
+
+export async function obterChecklistReceitas(codigos = []) {
+  const arr = Array.isArray(codigos) ? codigos : [];
+  const limpos = arr
+    .map((c) => Math.round(Number(c)))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  if (limpos.length === 0) return {};
+  const { data } = await api.get('/receitas/checklist', {
+    params: { codigos: limpos.join(',') },
+  });
+  return data;
+}
+
+export async function atualizarChecklistReceita(codigo, atualizado) {
+  const c = Math.round(Number(codigo));
+  const { data } = await api.patch(`/receitas/checklist/${c}`, { atualizado: atualizado === true });
+  return data;
+}

@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { buscarProdutos, getProduto, getReceita } from '../services/api';
+import { useState, useCallback, useEffect } from 'react';
+import { buscarProdutos, getProduto, getReceita, obterChecklistReceitas, atualizarChecklistReceita } from '../services/api';
 import { Busca } from '../components/Busca';
 import { Resultados } from '../components/Resultados';
 import { PainelReceita } from '../components/PainelReceita';
@@ -22,6 +22,7 @@ export function Receitas() {
   const [receita, setReceita] = useState([]);
   const [carregandoReceita, setCarregandoReceita] = useState(false);
   const [erro, setErro] = useState(null);
+  const [checklistMap, setChecklistMap] = useState({});
 
   const pesquisar = useCallback(async (q, f) => {
     const termoBusca = q ?? termo;
@@ -44,6 +45,32 @@ export function Receitas() {
       setCarregando(false);
     }
   }, [termo, filtro]);
+
+  useEffect(() => {
+    const codigos = (resultados || [])
+      .map((r) => Math.round(Number(r.indc_prod_codigo)))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    if (codigos.length === 0) return;
+    obterChecklistReceitas(codigos)
+      .then((map) => {
+        setChecklistMap((prev) => ({ ...prev, ...(map || {}) }));
+      })
+      .catch(() => {
+        // silencioso: não bloqueia a listagem
+      });
+  }, [resultados]);
+
+  const toggleChecklist = useCallback(async (codigo, marcado) => {
+    const key = String(Math.round(Number(codigo)));
+    const anterior = checklistMap?.[key] === true;
+    setChecklistMap((prev) => ({ ...prev, [key]: marcado === true }));
+    try {
+      await atualizarChecklistReceita(codigo, marcado === true);
+    } catch {
+      setChecklistMap((prev) => ({ ...prev, [key]: anterior }));
+      setErro('Não foi possível salvar o status de atualizado. Tente novamente.');
+    }
+  }, [checklistMap]);
 
   const selecionarProduto = useCallback(async (item) => {
     setProdutoSelecionado(null);
@@ -119,6 +146,8 @@ export function Receitas() {
               carregando={carregando}
               onSelecionar={selecionarProduto}
               selecionadoCodigo={produtoSelecionado?.indc_prod_codigo}
+              checklistMap={checklistMap}
+              onToggleChecklist={toggleChecklist}
             />
           </div>
           <div className="lg:col-span-3 order-1 lg:order-2">

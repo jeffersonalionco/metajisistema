@@ -1,4 +1,12 @@
-export function Resultados({ termo, itens, carregando, onSelecionar, selecionadoCodigo }) {
+export function Resultados({
+  termo,
+  itens,
+  carregando,
+  onSelecionar,
+  selecionadoCodigo,
+  checklistMap = {},
+  onToggleChecklist,
+}) {
   if (!termo?.trim()) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
@@ -42,20 +50,40 @@ export function Resultados({ termo, itens, carregando, onSelecionar, selecionado
           const codigoStr = codigoRaw != null && codigoRaw !== '' ? String(codigo) : '–';
           const ativo = Number(selecionadoCodigo) === codigo;
           const descricao = item.indc_descricao || `Produto ${codigoStr}`;
+          const atualizado = checklistMap?.[String(codigo)] === true;
           return (
             <li key={codigo}>
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => onSelecionar(item)}
-                className={`w-full text-left px-3 sm:px-4 py-3 sm:py-3 min-h-[56px] flex flex-col justify-center transition-all rounded-none touch-manipulation active:bg-slate-100 ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') onSelecionar(item);
+                }}
+                className={`w-full text-left px-3 sm:px-4 py-3 sm:py-3 min-h-[56px] flex items-start gap-3 transition-all rounded-none touch-manipulation active:bg-slate-100 cursor-pointer ${
                   ativo
                     ? 'bg-emerald-50 text-emerald-800 font-medium border-l-4 border-emerald-500'
                     : 'hover:bg-slate-50 text-slate-800 border-l-4 border-transparent'
                 }`}
               >
-                <span className="block text-sm leading-snug break-words">{descricao}</span>
-                <span className="block text-xs text-slate-500 mt-0.5">Cód. {codigoStr}</span>
-              </button>
+                <div className="pt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={atualizado}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onToggleChecklist?.(codigo, e.target.checked);
+                    }}
+                    className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    title={atualizado ? 'Marcado como atualizado' : 'Marcar como atualizado'}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="block text-sm leading-snug break-words">{descricao}</span>
+                  <span className="block text-xs text-slate-500 mt-0.5">Cód. {codigoStr}</span>
+                </div>
+              </div>
             </li>
           );
         })}
