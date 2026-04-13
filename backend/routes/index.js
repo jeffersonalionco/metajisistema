@@ -25,6 +25,10 @@ import {
   salvarConfigDocumentacaoIA,
   conversarComDocumentacaoIA,
 } from '../controllers/documentacaoIAController.js';
+import {
+  obterChecklistReceitas,
+  atualizarChecklistReceitas,
+} from '../controllers/receitasChecklistController.js';
 import { requireAuth, requireAdmin, requireDocumentacaoEditor, requirePermissao } from '../middleware/auth.js';
 import authRoutes from './authRoutes.js';
 
@@ -36,6 +40,8 @@ router.get('/buscar', requireAuth, requirePermissao('pode_receitas', 'Sem permis
 router.get('/produto/:codigo', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para acessar Receitas'), getProduto);
 router.patch('/produto/:codigo/obs', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para editar Receitas'), atualizarObs);
 router.get('/receita/:codigo', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para acessar Receitas'), getReceita);
+router.get('/receitas/checklist', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para acessar Receitas'), obterChecklistReceitas);
+router.patch('/receitas/checklist/:codigo', requireAuth, requirePermissao('pode_receitas', 'Sem permissão para editar Receitas'), atualizarChecklistReceitas);
 
 router.get('/empresa', requireAuth, requirePermissao('pode_empresa', 'Sem permissão para acessar Empresa'), getEmpresa);
 router.put('/empresa', requireAuth, requirePermissao('pode_empresa', 'Sem permissão para editar Empresa'), updateEmpresa);

@@ -176,6 +176,20 @@ export async function initMetajiSchema() {
       VALUES (1, true, 8)
       ON CONFLICT (id) DO NOTHING
     `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS public.receitas_produto_checklist (
+        usuario_id INTEGER NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
+        prod_codigo NUMERIC(12,0) NOT NULL,
+        atualizado BOOLEAN DEFAULT false,
+        atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (usuario_id, prod_codigo)
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_receitas_produto_checklist_usuario
+      ON public.receitas_produto_checklist (usuario_id)
+    `);
   } finally {
     client.release();
   }

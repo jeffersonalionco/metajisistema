@@ -16,13 +16,19 @@ export async function buscarProdutos(req, res) {
     }
     const filtro = FILTROS_VALIDOS.has(req.query.filtro) ? req.query.filtro : null;
     const searchTerm = `%${q}%`;
+    const qSomenteDigitos = /^[0-9]+$/.test(q) ? q : null;
+    const codigoNumero = qSomenteDigitos ? Math.round(Number(qSomenteDigitos)) : null;
 
     let sql = `
       SELECT c.indc_prod_codigo, c.indc_descricao
       FROM public.industc c
-      WHERE c.indc_descricao ILIKE $1
+      WHERE (
+        c.indc_descricao ILIKE $1
+        OR CAST(c.indc_prod_codigo AS TEXT) ILIKE $1
+        ${codigoNumero ? `OR c.indc_prod_codigo = $2` : ''}
+      )
     `;
-    const params = [searchTerm];
+    const params = codigoNumero ? [searchTerm, codigoNumero] : [searchTerm];
 
     if (filtro === 'sem_obs') {
       sql += ` AND (c.indc_obs IS NULL OR TRIM(c.indc_obs) = '')`;
